@@ -330,7 +330,6 @@ ModelLinear <- function(data,
         switch( scenario
                ,assessor = Assessor()
                ,avm = Avm()
-               ,avmnoa = Avm()
                ,mortgage = Mortgage()
                ,stop(paste('bad scenario', scenario))
                )
