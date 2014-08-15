@@ -9,11 +9,18 @@ MakeModelLinear <- function(scenario, testing.period, data, num.training.days,
     # force all args
     force(scenario)
     force(testing.period)
+    force(data)
     force(num.training.days)
     force(response)
     force(predictors)
 
-    stopifnot(!is.null(num.training.days))  # this failed during testing
+    stopifnot(!is.null(scenario))
+    stopifnot(!is.null(testing.period))
+    stopifnot(!is.null(data))
+    stopifnot(!is.null(num.training.days))
+    stopifnot(!is.null(response))
+    stopifnot(!is.null(predictors))
+
 
     features <- list(response = response,
                      predictors = predictors)
@@ -63,14 +70,13 @@ MakeModelLinear <- function(scenario, testing.period, data, num.training.days,
         switch( scenario
                ,assessor = MyTrainingPeriodAssessor(testing.period$first.date)
                ,avm      = MyTrainingPeriodAvm()  # return a function(testing.date) --> training.period
-               ,avmnoa   = MyTrainingPeriodAvm()  # return a function(testing.date) --> training.period
                ,mortgage = MyTrainingPeriodMortgage()  # return a function(testing.date) --> training.period
-               ,stop('bad scenario value')
+               ,stop(paste('bad scenario value =', scenario))
                )
     stopifnot(!is.null(my.training.period))
 
     Model <- function(data, training.indices, testing.indices) {
-        #cat('starting MakeModelLinear::Model\n'); browser()
+        #cat('starting MakeModelLinear::Model\n'); debugonce(ModelLinear); browser(); 
                 
         result <- ModelLinear(data = data,
                               training.indices = training.indices,
