@@ -1,4 +1,3 @@
-source('IfThenElse.R')
 Predictors <- function(set, form, center, useAssessment) {
     # return set of predictors
     # ARGS
