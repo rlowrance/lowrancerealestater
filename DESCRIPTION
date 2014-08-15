@@ -1,0 +1,8 @@
+Package: lowrancerealestater
+Title: Public real estate functions
+Description: Enables others to add functionaly to Roy's real estate experiments
+Version: 0.1
+Author: Roy Lowrance <roy.lowrance@gmail.com>
+Maintainer: Roy Lowrance <roy.lowrance@gmail.com>
+License: GPL v3
+
