@@ -19,14 +19,16 @@ ModelLinear <- function(data,
     #   for the specified scenario. training period, testing period, and feature set
     # ARGS:
     # data             : data.frame
-    # training.indices : selector vector; only these observations in data can be used for training
-    # testing.indices  : selector vector; only these observations in data can be used for testing
+    # training.indices : bool vector; only these observations in data can be used for training
+    # testing.indices  : bool vector; only these observations in data can be used for testing
     # scenario         : chr scalar, one of 'assessor', 'avm', 'mortgage'
     # training.period  : list of Date, $first.date, $last.date or
     #                    function(transaction.date) --> training.period for the transaction date
     # testing.period   : list of Date, $first.date, $last.date
     # features         : list of $response (chr scalar) $predictors (chr vector)
     # verbose.model    : logical, if true, print as we go
+
+    #cat('start ModelLinear\n'); browser()
 
     if (FALSE) {
         cat('starting ModelLinear',
@@ -38,6 +40,12 @@ ModelLinear <- function(data,
             '\n')
         browser()
     }
+
+    # check type of some args
+    stopifnot(class(training.indices) == 'logical')
+    stopifnot(class(testing.indices) == 'logical')
+    stopifnot(length(training.indices) == length(testing.indices))
+    stopifnot(length(training.indices) == nrow(data))
 
     DropFeaturesWithOneUniqueValue <- function(data, feature.names) {
         # return list of feature names, dropping any features that are factors and have one level
@@ -73,6 +81,30 @@ ModelLinear <- function(data,
 
         fitted <- lm(data = training.data,
                      formula = the.formula)
+
+        debugging <- FALSE
+        if (debugging) {
+            # compute hash of the training.data
+            # hash := sum of elements
+
+            Hash <- function(dataframe) {
+                element.sum <- 0
+                for (column.name in names(dataframe)) {
+                    element.sum <- element.sum + sum(as.numeric(dataframe[[column.name]]))
+                }
+                element.sum
+            }
+
+            cat('training.data\n')
+            print(str(training.data))
+            cat('hash of training.date', Hash(training.data), '\n')
+            cat('print fitted coefficients\n')
+            print(fitted)
+            cat('the.formula\n')
+            print(the.formula)
+        }
+
+
         if (verbose.model) {
             print(summary(fitted))
         }
