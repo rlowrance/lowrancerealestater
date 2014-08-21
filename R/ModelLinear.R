@@ -64,6 +64,7 @@ ModelLinear <- function(data,
 
     Assessor <- function() {
         #cat('starting ModelLinear::Assessor\n'); browser()
+        debugging <- TRUE
         visible.to.assessor <- data$recordingDate <= training.period$last.date
 
         in.training.period <- 
@@ -71,7 +72,11 @@ ModelLinear <- function(data,
             data$saleDate <= training.period$last.date
         selected.for.training <- training.indices & in.training.period & visible.to.assessor
         num.training.samples <- sum(selected.for.training)
-        stopifnot(sum(selected.for.training) > 0)
+        if (debugging) {
+            cat('num.training.samples', num.training.samples, '\n')
+            if (num.training.samples == 0) browser()
+        }
+        stopifnot(num.training.samples > 0)
 
         training.data <- data[selected.for.training,]
 
@@ -82,8 +87,7 @@ ModelLinear <- function(data,
         fitted <- lm(data = training.data,
                      formula = the.formula)
 
-        debugging <- FALSE
-        if (debugging) {
+        if (FALSE && debugging) {
             # compute hash of the training.data
             # hash := sum of elements
 
@@ -114,41 +118,53 @@ ModelLinear <- function(data,
             data$saleDate >= testing.period$first.date &
             data$saleDate <= testing.period$last.date
         selected.for.testing <- testing.indices & in.testing.period
-        stopifnot(sum(selected.for.testing) > 0)
+        num.selected.for.testing <- sum(selected.for.testing)
 
-        newdata <- data[selected.for.testing,]
-        actual <- newdata$price
-        prediction <- predict.lm(fitted, newdata)
-        DEBUGGING <- FALSE
-        if (DEBUGGING) {
-            cat('debugging ModelLinear\n'); browser()
-            has.large.error <- 73731
-            has.large.error <- 2543
-            newdata2 <- data[has.large.error,]  # transaction with error 1.4 million
-            prediction2 <- predict.lm(fitted, newdata2)
-        }
+        # having no testing samples is a possibility
+        if (num.selected.for.testing == 0) {
+            warning('no samples were selected for testing')
+            result <- list( actual = NA
+                           ,prediction = NA
+                           ,num.training.samples = num.training.samples
+                           ,fitted = fitted
+                           )
+        } else {
+            newdata <- data[selected.for.testing,]
+            actual <- newdata$price
+            prediction <- predict.lm(fitted, newdata)
+            DEBUGGING <- FALSE
+            if (DEBUGGING) {
+                cat('debugging ModelLinear\n'); browser()
+                has.large.error <- 73731
+                has.large.error <- 2543
+                newdata2 <- data[has.large.error,]  # transaction with error 1.4 million
+                prediction2 <- predict.lm(fitted, newdata2)
+            }
 
-        # adjust log.price to price
-        if (features$response == 'log.price') {
-            prediction.returned <- exp(prediction)
-        }  else {
-            prediction.returned <- prediction
+            # adjust log.price to price
+            if (features$response == 'log.price') {
+                prediction.returned <- exp(prediction)
+            }  else {
+                prediction.returned <- prediction
+            }
+            prediction.returned
+
+            result <- list( actual = actual
+                           ,prediction = prediction.returned
+                           ,num.training.samples = num.training.samples
+                           ,fitted = fitted)
+
         }
-        
-        result <- list( actual = actual
-                       ,prediction = prediction.returned
-                       ,num.training.samples = num.training.samples
-                       ,fitted = fitted)
         result
     }
 
     SelectedForTesting <- function(data, testing.indices, testing.period) {
+        # return indices in data to be used for testing
         #cat('starting SelectedForTesting\n'); browser()
         in.testing.period <- 
             data$saleDate >= testing.period$first.date &
             data$saleDate <= testing.period$last.date
         selected.for.testing <- testing.indices & in.testing.period
-        stopifnot(sum(selected.for.testing) > 0)
         selected.for.testing
     }
 
@@ -240,6 +256,15 @@ ModelLinear <- function(data,
                                                    ,testing.indices = testing.indices
                                                    ,testing.period = testing.period
                                                    )
+        if (sum(selected.for.testing) == 0) {
+            result <- list( actual = NA
+                           ,prediction = NA
+                           ,num.training.samples = 0
+                           ,fitted = NULL
+                           )
+            return(result)
+        }
+
         testing.indices <- which(selected.for.testing)
         if (verbose) {
             Printf('avm model has %d testing indices\n', length(testing.indices))
@@ -327,6 +352,15 @@ ModelLinear <- function(data,
                                                    ,testing.indices = testing.indices
                                                    ,testing.period = testing.period
                                                    )
+        if (sum(selected.for.testing) == 0) {
+            result <- list( actual = NA
+                           ,prediction = NA
+                           ,num.training.samples = 0
+                           ,fitted = NULL
+                           )
+            return(result)
+        }
+
         testing.indices <- which(selected.for.testing)
         if (verbose.model) {
             Printf('mortgage model has %d testing indices\n', length(testing.indices))
