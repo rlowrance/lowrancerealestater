@@ -141,8 +141,8 @@ ModelLinear <- function(data,
                 prediction2 <- predict.lm(fitted, newdata2)
             }
 
-            # adjust log.price to price
-            if (features$response == 'log.price') {
+            # adjust price.log to price
+            if (features$response == 'price.log') {
                 prediction.returned <- exp(prediction)
             }  else {
                 prediction.returned <- prediction
@@ -188,7 +188,7 @@ ModelLinear <- function(data,
         newdata <- data[test.index,]
         actual <- data[test.index, 'price']
         prediction <- predict.lm(fitted, newdata = newdata)
-        prediction.returned <- ifelse(features$response == 'log.price', exp(prediction), prediction)
+        prediction.returned <- ifelse(features$response == 'price.log', exp(prediction), prediction)
 
         result <- list(actual = actual, prediction = prediction.returned)
         if (verbose.model) {
